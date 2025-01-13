@@ -1,0 +1,10 @@
+graph LR
+    A[Input Document] --> B[Extract Document Schema]
+    B --> C{Validate Schema}
+    C -->|Needs Improvement| D[Feedback Loop]
+    D --> B
+    C -->|Approved| E[Output JSON]
+
+    style B fill:#f9f,stroke:#333
+    style C fill:#bbf,stroke:#333
+    style D fill:#ffa,stroke:#333
