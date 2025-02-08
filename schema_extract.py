@@ -8,6 +8,9 @@ import operator
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 import json
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 class AgentState(TypedDict):
     messages: List[str]
@@ -42,9 +45,21 @@ def extract_schema_from_text(text: Annotated[str, "Text to extract schema from"]
     Returns:
         dict: Extracted JSON schema
     """
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        print("Warning: GROQ_API_KEY not found in environment variables")
+        return {
+            "type": "object",
+            "properties": {},
+            "error": "GROQ_API_KEY not found in environment variables"
+        }
+    
+    print(f"Using API key: {api_key[:10]}...")  # Only print first 10 chars for security
+    
     llm = ChatGroq(
         temperature=0.1,
-        model_name="llama-3.3-70b-versatile"
+        model_name="llama-3.3-70b-versatile",
+        api_key=api_key
     )
     
     prompt = ChatPromptTemplate.from_messages([
@@ -59,17 +74,17 @@ def extract_schema_from_text(text: Annotated[str, "Text to extract schema from"]
         5. The output must be valid JSON
         6. Do not include any text before or after the JSON
         
-        Schema format must be exactly:
-        {
+        Schema format must be exactly like this example:
+        {{
             "type": "object",
-            "properties": {
-                "fieldName": {
+            "properties": {{
+                "fieldName": {{
                     "type": "string",
                     "description": "Description of the field"
-                }
-            },
+                }}
+            }},
             "required": ["fieldName"]
-        }"""),
+        }}"""),
         ("user", "Extract a JSON schema from this text. Remember to output ONLY the JSON schema, no other text:\n\n{text}")
     ])
     
